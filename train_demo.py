@@ -99,12 +99,8 @@ def train() -> MLP:
     """
     random.seed(42)
     X, y = generate_moons_dataset(n_samples=40)
-    model = MLP(
-        in_features=2,
-        layer_sizes=[8, 8, 1],
-        hidden_activation="tanh",
-        output_activation=None,
-    )
+    model = MLP(in_features=2, layer_sizes=[8, 8, 1], hidden_activation="tanh", output_activation=None)
+    velocities = [0.0 for _ in model.parameters()]
 
     epochs = 60
     lr_start, lr_end = 0.15, 0.02
@@ -116,8 +112,9 @@ def train() -> MLP:
         loss, acc = compute_batch_loss(model, X, y)
         loss.backward()
 
-        for p in model.parameters():
-            p.data -= lr * p.grad
+        for i, p in enumerate(model.parameters()):
+            velocities[i] = 0.9 * velocities[i] - lr * p.grad
+            p.data += velocities[i]
 
         if epoch % 10 == 0:
             print(
